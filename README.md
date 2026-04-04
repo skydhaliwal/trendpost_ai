@@ -56,7 +56,17 @@ To update the API key:
 
 ## API Key
 
-The app uses a Google Gemini API key included in the code. For production, consider securing the API key.
+The app now uses a secure Firebase Cloud Function as a proxy for the Gemini API. The API key is stored server-side in Firebase Functions configuration and is never exposed to the client.
+
+**Setup:**
+1. Get your Gemini API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
+2. Set it securely in Firebase: `firebase functions:config:set gemini.apikey="YOUR_KEY"`
+3. Deploy the function: `firebase deploy --only functions`
+
+**Security Benefits:**
+- API keys are never visible in client-side code
+- Rate limiting prevents abuse
+- Server-side validation and error handling
 
 ## Target Audience
 
@@ -87,7 +97,24 @@ When prompted:
 - Automatic deploys on main → Y
 - Preview deployments on PRs → Y
 
-Step 4 — First manual deploy:
+Step 4 — Set up Cloud Functions:
+
+firebase init functions
+
+When prompted:
+- Language → JavaScript
+- Use ESLint → Y
+- Install dependencies → Y
+
+Step 5 — Configure Gemini API key securely:
+
+firebase functions:config:set gemini.apikey="YOUR_GEMINI_API_KEY_HERE"
+
+Step 6 — Deploy functions:
+
+firebase deploy --only functions
+
+Step 7 — First manual deploy:
 
 firebase deploy
 
@@ -101,6 +128,11 @@ git push origin main
 
 ### Cost: $0 forever (Firebase Hosting free tier)
 - 10GB storage
-- 360MB bandwidth per day  
+- 360MB bandwidth per day
 - Custom domain and SSL included
 - Global CDN included
+
+### Security Notes:
+- API keys are now stored server-side in Firebase Functions config
+- Client-side code no longer exposes sensitive credentials
+- Rate limiting prevents abuse (20 requests per IP per hour)
