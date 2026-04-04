@@ -10,8 +10,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Lucide Icons CDN -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-    <!-- Configuration -->
-    <script src="config.js"></script>
 </head>
 <body class="light-mode">
     <div id="app">
@@ -756,9 +754,8 @@
 
     <script>
         // Vanilla JavaScript for app logic
-        // Load configuration (API keys are still client-side visible)
-        let API_KEY = CONFIG?.GEMINI_API_KEY || '';
-        const GEMINI_URL = CONFIG?.GEMINI_URL || 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent';
+        // Firebase Cloud Function URL for generating posts (API key is stored securely server-side)
+        const FIREBASE_GENERATE_POST_URL = 'https://us-central1-trendpost-ai.cloudfunctions.net/generatePost';
 
         // Curated trending topics
         const trendingTopics = {
@@ -929,8 +926,8 @@ IMPORTANT: Return your response as a JSON array with exactly 2 objects. Each obj
 
 Return ONLY the JSON array, no other text.`;
 
-                // Call Firebase Cloud Function instead of Gemini API directly
-                const response = await fetch('https://us-central1-trendpost-ai.cloudfunctions.net/generatePost', {
+                // Call Firebase Cloud Function (API key is stored securely server-side)
+                const response = await fetch(FIREBASE_GENERATE_POST_URL, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
