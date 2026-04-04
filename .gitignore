@@ -1,8 +1,13 @@
 # TrendPost AI .gitignore
 
+# Firebase and deployment files
+.firebase/
+firebase-debug.log
+
 # API Keys and sensitive configuration
 config.js
 .env
+prompts.md
 
 # OS generated files
 .DS_Store

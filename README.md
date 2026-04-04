@@ -61,3 +61,46 @@ The app uses a Google Gemini API key included in the code. For production, consi
 ## Target Audience
 
 Engineering leaders, CTOs, VPs of Engineering, and AI transformation stakeholders.
+
+## Deployment (Firebase Hosting — Google Cloud)
+
+### One-time setup (run these commands in VS Code terminal):
+
+Step 1 — Install Firebase CLI:
+
+npm install -g firebase-tools
+
+Step 2 — Login with your Google account:
+
+firebase login
+
+Step 3 — Initialise Firebase in the project:
+
+firebase init hosting
+
+When prompted:
+- Use an existing project or create new → create new, name it trendpost-ai
+- Public directory → . (just a dot for root)
+- Single page app → N
+- Automatic GitHub deploys → Y
+- GitHub repo → your-username/trendpost-ai
+- Automatic deploys on main → Y
+- Preview deployments on PRs → Y
+
+Step 4 — First manual deploy:
+
+firebase deploy
+
+### After setup — every future deploy is automatic:
+
+git add .
+git commit -m "your message"
+git push origin main
+→ GitHub Actions deploys to Firebase within 2 minutes
+→ Live at https://trendpost-ai-xxxxx.web.app
+
+### Cost: $0 forever (Firebase Hosting free tier)
+- 10GB storage
+- 360MB bandwidth per day  
+- Custom domain and SSL included
+- Global CDN included
