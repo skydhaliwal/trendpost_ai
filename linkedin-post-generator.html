@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrendPost AI - LinkedIn Post Generator</title>
+    <!-- Google Fonts: Inter for professional look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <!-- Configuration -->
+    <script src="config.js"></script>
+</head>
+<body class="light-mode">
+    <div id="app">
+        <!-- Toast Notification Container -->
+        <div id="toast-container"></div>
+
+        <header class="topbar">
+            <div class="logo">
+                <i data-lucide="pen-tool"></i>
+                TrendPost AI
+            </div>
+            <div class="theme-toggle">
+                <button id="theme-btn">🌙</button>
+            </div>
+        </header>
+        <div class="container">
+            <aside class="sidebar">
+                <nav>
+                    <ul>
+                        <li><a href="#" id="nav-generate" class="active">Generate Post</a></li>
+                        <li><a href="#" id="nav-saved">Saved Drafts</a></li>
+                    </ul>
+                </nav>
+                <div class="quick-topics">
+                    <h3>Quick Topics</h3>
+                    <ul>
+                        <li><a href="#" data-topic="AI Agents">AI Agents</a></li>
+                        <li><a href="#" data-topic="Platform Engineering">Platform Engineering</a></li>
+                        <li><a href="#" data-topic="Developer Productivity">Developer Productivity</a></li>
+                        <li><a href="#" data-topic="Cloud FinOps">Cloud FinOps</a></li>
+                        <li><a href="#" data-topic="AI Governance">AI Governance</a></li>
+                        <li><a href="#" data-topic="Engineering Leadership">Engineering Leadership</a></li>
+                    </ul>
+                </div>
+            </aside>
+            <main class="main-content">
+                <div id="generate-view" class="view active">
+                    <!-- Form for inputs -->
+                    <section id="input-section">
+                        <h2>Create New Post</h2>
+                        <!-- Topic input and suggestions -->
+                        <div id="topic-input">
+                            <label for="topic">Topic:</label>
+                            <input type="text" id="topic" placeholder="Enter a topic or choose from suggestions">
+                            <button id="show-suggestions">Show Suggestions</button>
+                            <div id="suggestions" style="display: none;">
+                                <!-- Suggestions will be populated here -->
+                            </div>
+                        </div>
+                        <!-- Post style selection -->
+                        <div id="style-selection">
+                            <label>Post Style:</label>
+                            <select id="post-style">
+                                <option value="">Select Style</option>
+                                <option value="3-lessons">3 Lessons</option>
+                                <option value="hot-take">Hot Take</option>
+                                <option value="trend-implication">Trend + Implication</option>
+                                <option value="framework">Framework</option>
+                                <option value="story">Story</option>
+                                <option value="community-q">Community Q</option>
+                            </select>
+                        </div>
+                        <!-- Tone selection -->
+                        <div id="tone-selection">
+                            <label>Tone:</label>
+                            <select id="tone">
+                                <option value="">Select Tone</option>
+                                <option value="strategic">Strategic</option>
+                                <option value="technical">Technical</option>
+                                <option value="conversational">Conversational</option>
+                            </select>
+                        </div>
+                        <!-- Optional perspective -->
+                        <div id="perspective-input">
+                            <label for="perspective">Your Perspective (optional):</label>
+                            <textarea id="perspective" placeholder="Add your own context or perspective"></textarea>
+                        </div>
+                        <!-- CTA selection -->
+                        <div id="cta-selection">
+                            <label>Call to Action:</label>
+                            <select id="cta">
+                                <option value="none">No CTA</option>
+                                <option value="question">Ask a question</option>
+                                <option value="opinion">Invite opinion</option>
+                                <option value="sharing">Invite sharing</option>
+                            </select>
+                        </div>
+                        <button id="generate-btn">Generate Drafts</button>
+                    </section>
+                    <!-- Generated drafts -->
+                    <section id="drafts-section" style="display: none;">
+                        <h2>Draft Posts</h2>
+                        <div id="drafts">
+                            <!-- Drafts will be displayed here -->
+                        </div>
+                    </section>
+                </div>
+                <div id="saved-view" class="view">
+                    <!-- Saved drafts -->
+                    <section id="saved-section">
+                        <h2>Saved Drafts</h2>
+                        <div id="saved-drafts">
+                            <!-- Saved drafts will be displayed here -->
+                        </div>
+                    </section>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <style>
+        /* CSS Variables for Dark Mode */
+        :root {
+            --bg-color: #f8f9fa;
+            --text-color: #333;
+            --card-bg: #ffffff;
+            --border-color: #ddd;
+            --primary-color: #1a73e8;
+            --hover-color: #1557b0;
+            --sidebar-bg: #f1f3f4;
+            --sidebar-text: #333;
+            --input-bg: #ffffff;
+            --shadow: rgba(0,0,0,0.1);
+        }
+
+        .dark-mode {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --card-bg: #1e1e1e;
+            --border-color: #333;
+            --primary-color: #4a90e2;
+            --hover-color: #357abd;
+            --sidebar-bg: #1a1a1a;
+            --sidebar-text: #e0e0e0;
+            --input-bg: #2a2a2a;
+            --shadow: rgba(0,0,0,0.3);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 4px var(--shadow);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .theme-toggle button {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .theme-toggle button:hover {
+            background-color: var(--border-color);
+        }
+
+        .container {
+            display: flex;
+            margin-top: 60px;
+            height: calc(100vh - 60px);
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: var(--sidebar-bg);
+            padding: 20px;
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+        }
+
+        .sidebar nav a {
+            text-decoration: none;
+            color: var(--sidebar-text);
+            padding: 12px 16px;
+            display: block;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar nav a:hover,
+        .sidebar nav a.active {
+            background-color: var(--primary-color);
+            color: white;
+            transform: translateX(4px);
+        }
+
+        .quick-topics {
+            margin-top: 30px;
+        }
+
+        .quick-topics h3 {
+            margin: 0 0 15px 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--sidebar-text);
+        }
+
+        .quick-topics ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .quick-topics li {
+            margin-bottom: 5px;
+        }
+
+        .quick-topics a {
+            text-decoration: none;
+            color: var(--sidebar-text);
+            padding: 8px 16px;
+            display: block;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .quick-topics a:hover {
+            background-color: var(--border-color);
+            transform: translateX(2px);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .view {
+            display: none;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        section {
+            background: var(--card-bg);
+            padding: 24px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px var(--shadow);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-color);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-family: inherit;
+            background: var(--input-bg);
+            color: var(--text-color);
+            transition: all 0.2s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            background-color: var(--hover-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        #suggestions {
+            margin-top: 10px;
+        }
+
+        .suggestion-category {
+            margin-bottom: 15px;
+        }
+
+        .suggestion-category h3 {
+            font-size: 1rem;
+            margin-bottom: 8px;
+            color: var(--text-color);
+        }
+
+        .suggestion-item {
+            display: inline-block;
+            background: var(--primary-color);
+            color: white;
+            padding: 6px 12px;
+            margin: 4px 4px 0 0;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .suggestion-item:hover {
+            background-color: var(--hover-color);
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .draft {
+            margin-bottom: 24px;
+        }
+
+        .draft-card {
+            border: 2px solid var(--border-color);
+            padding: 20px;
+            border-radius: 12px;
+            background: var(--card-bg);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        .draft-A .draft-card {
+            border-left: 6px solid #1a73e8;
+        }
+
+        .draft-B .draft-card {
+            border-left: 6px solid #34a853;
+        }
+
+        .draft-card:hover {
+            box-shadow: 0 6px 16px var(--shadow);
+        }
+
+        .draft-header {
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .draft-title-section {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .draft-title {
+            margin: 0;
+            color: var(--text-color);
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .draft-A .draft-title {
+            color: #1a73e8;
+        }
+
+        .draft-B .draft-title {
+            color: #34a853;
+        }
+
+        .draft-angle {
+            margin: 0;
+            font-size: 0.95rem;
+            color: var(--primary-color);
+            font-style: italic;
+            font-weight: 500;
+            line-height: 1.4;
+        }
+
+        .draft-text {
+            width: 100%;
+            height: 240px;
+            margin-bottom: 12px;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--input-bg);
+            color: var(--text-color);
+            font-family: inherit;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            resize: vertical;
+            transition: border-color 0.2s;
+        }
+
+        .draft-text:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
+        }
+
+        .draft-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .char-counter {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.85rem;
+        }
+
+        .char-count {
+            font-weight: 500;
+            color: var(--text-color);
+            white-space: nowrap;
+        }
+
+        .char-count.near-limit {
+            color: #f57c00;
+        }
+
+        .char-count.over-limit {
+            color: #d32f2f;
+            font-weight: 600;
+        }
+
+        .warning-icon {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .draft-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .draft-actions button {
+            flex: 1;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-copy {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-copy:hover {
+            background-color: var(--hover-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px var(--shadow);
+        }
+
+        .btn-save {
+            background-color: #34a853;
+            color: white;
+        }
+
+        .btn-save:hover {
+            background-color: #2d904d;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px var(--shadow);
+        }
+
+        @media (max-width: 768px) {
+            .draft-actions {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .draft-actions button {
+                width: 100%;
+            }
+
+            .draft-footer {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+        }
+
+        .saved-draft {
+            border: 1px solid var(--border-color);
+            padding: 16px;
+            margin-bottom: 16px;
+            border-radius: 6px;
+            background: var(--card-bg);
+        }
+
+        .saved-draft-content {
+            margin-bottom: 12px;
+        }
+
+        .saved-draft-text {
+            width: 100%;
+            min-height: 120px;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--input-bg);
+            color: var(--text-color);
+            font-family: inherit;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+
+        .saved-draft-text:focus {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+        }
+
+        .saved-draft-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .saved-draft-actions button {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .topbar {
+                flex-direction: column;
+                gap: 15px;
+                padding: 15px 20px;
+            }
+
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+                padding: 15px;
+            }
+
+            .main-content {
+                padding: 15px;
+            }
+
+            section {
+                padding: 16px;
+            }
+        }
+
+        /* Loading Skeleton Animation */
+        .skeleton-loader {
+            padding: 20px;
+        }
+
+        .skeleton-line {
+            height: 16px;
+            background: linear-gradient(90deg, var(--border-color) 25%, rgba(0,0,0,0.05) 50%, var(--border-color) 75%);
+            background-size: 200% 100%;
+            border-radius: 4px;
+            margin-bottom: 12px;
+            animation: shimmer 2s infinite;
+        }
+
+        .skeleton-line.short {
+            width: 60%;
+        }
+
+        .skeleton-line.medium {
+            width: 80%;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Toast Notification Styles */
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            pointer-events: none;
+        }
+
+        .toast {
+            background: var(--card-bg);
+            color: var(--text-color);
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 16px var(--shadow);
+            margin-bottom: 12px;
+            border-left: 4px solid var(--primary-color);
+            animation: slideInRight 0.3s ease;
+            pointer-events: auto;
+            max-width: 350px;
+            word-wrap: break-word;
+        }
+
+        .toast.success {
+            border-left-color: #34a853;
+        }
+
+        .toast.error {
+            border-left-color: #d32f2f;
+        }
+
+        .toast.info {
+            border-left-color: #1a73e8;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+        }
+
+        .toast.removing {
+            animation: slideOutRight 0.3s ease;
+        }
+
+        @media (max-width: 480px) {
+            #toast-container {
+                top: 10px;
+                right: 10px;
+                left: 10px;
+            }
+
+            .toast {
+                max-width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .topbar {
+                padding: 10px 15px;
+            }
+
+            .logo {
+                font-size: 1.2rem;
+            }
+
+
+
+            .sidebar {
+                padding: 10px;
+            }
+
+            .quick-topics h3 {
+                font-size: 0.9rem;
+            }
+
+            .main-content {
+                padding: 10px;
+            }
+        }
+    </style>
+
+    <script>
+        // Vanilla JavaScript for app logic
+        // Load configuration (API keys are still client-side visible)
+        let API_KEY = CONFIG?.GEMINI_API_KEY || '';
+        const GEMINI_URL = CONFIG?.GEMINI_URL || 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent';
+
+        // Curated trending topics
+        const trendingTopics = {
+            'AI Agents': ['Autonomous AI systems', 'Multi-agent collaboration', 'AI agent frameworks', 'Ethical AI deployment'],
+            'Platform Engineering': ['Internal developer platforms', 'Platform as a product', 'DevOps evolution', 'Cloud-native architectures'],
+            'Developer Productivity': ['AI-powered coding tools', 'Low-code platforms', 'Continuous integration best practices', 'Developer experience metrics'],
+            'FinOps': ['Cloud cost optimization', 'FinOps culture', 'Budget forecasting tools', 'Resource utilization analytics'],
+            'Governance': ['Compliance automation', 'Risk management frameworks', 'Data governance policies', 'Security by design'],
+            'Engineering Leadership': ['Scaling engineering teams', 'Technical debt management', 'Innovation in engineering', 'Leadership in AI transformation']
+        };
+
+        // Saved drafts in memory (array)
+        let savedDrafts = [];
+
+        // DOM elements
+        const themeBtn = document.getElementById('theme-btn');
+        const navGenerate = document.getElementById('nav-generate');
+        const navSaved = document.getElementById('nav-saved');
+        const generateView = document.getElementById('generate-view');
+        const savedView = document.getElementById('saved-view');
+        const topicInput = document.getElementById('topic');
+        const showSuggestionsBtn = document.getElementById('show-suggestions');
+        const suggestionsDiv = document.getElementById('suggestions');
+        const postStyleSelect = document.getElementById('post-style');
+        const toneSelect = document.getElementById('tone');
+        const perspectiveTextarea = document.getElementById('perspective');
+        const ctaSelect = document.getElementById('cta');
+        const generateBtn = document.getElementById('generate-btn');
+        const draftsSection = document.getElementById('drafts-section');
+        const draftsDiv = document.getElementById('drafts');
+        const savedDraftsDiv = document.getElementById('saved-drafts');
+
+        // Theme toggle
+        themeBtn.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            themeBtn.textContent = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
+        });
+
+        // Navigation
+        navGenerate.addEventListener('click', (e) => {
+            e.preventDefault();
+            switchView('generate');
+        });
+
+        navSaved.addEventListener('click', (e) => {
+            e.preventDefault();
+            switchView('saved');
+        });
+
+        function switchView(view) {
+            if (view === 'generate') {
+                generateView.classList.add('active');
+                savedView.classList.remove('active');
+                navGenerate.classList.add('active');
+                navSaved.classList.remove('active');
+            } else if (view === 'saved') {
+                savedView.classList.add('active');
+                generateView.classList.remove('active');
+                navSaved.classList.add('active');
+                navGenerate.classList.remove('active');
+            }
+        }
+
+        // Quick topics
+        document.querySelectorAll('.quick-topics a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                topicInput.value = e.target.dataset.topic;
+                switchView('generate');
+            });
+        });
+
+        // Event listeners for existing functionality
+        showSuggestionsBtn.addEventListener('click', showSuggestions);
+        generateBtn.addEventListener('click', generateDrafts);
+
+        // Functions
+        function showSuggestions() {
+            suggestionsDiv.innerHTML = '';
+            for (const category in trendingTopics) {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'suggestion-category';
+                categoryDiv.innerHTML = `<h3>${category}</h3>`;
+                trendingTopics[category].forEach(topic => {
+                    const item = document.createElement('span');
+                    item.className = 'suggestion-item';
+                    item.textContent = topic;
+                    item.addEventListener('click', () => {
+                        topicInput.value = topic;
+                        suggestionsDiv.style.display = 'none';
+                    });
+                    categoryDiv.appendChild(item);
+                });
+                suggestionsDiv.appendChild(categoryDiv);
+            }
+            suggestionsDiv.style.display = suggestionsDiv.style.display === 'none' ? 'block' : 'none';
+        }
+
+        async function generateDrafts() {
+            // Validate inputs
+            const topic = topicInput.value.trim();
+            const style = postStyleSelect.value;
+            const tone = toneSelect.value;
+            const perspective = perspectiveTextarea.value.trim();
+            const cta = ctaSelect.value;
+
+            // Validation with friendly error messages
+            if (!topic) {
+                showErrorMessage('Please enter a topic to generate posts.');
+                return;
+            }
+            if (!style) {
+                showErrorMessage('Please select a post style.');
+                return;
+            }
+            if (!tone) {
+                showErrorMessage('Please select a tone for your posts.');
+                return;
+            }
+            if (!API_KEY || API_KEY === '') {
+                showErrorMessage('API key is not configured. Please set it in config.js and reload the page.');
+                return;
+            }
+
+            // Show loading state
+            draftsSection.style.display = 'block';
+            showLoadingState();
+            generateBtn.disabled = true;
+
+            try {
+                // Create the system prompt for the AI
+                const systemPrompt = `You are an expert AI transformation strategist and senior engineering leader. You write LinkedIn posts for C-suite and senior engineering leaders (CTOs, VPs of Engineering, principal engineers). Your posts are:
+- Specific and practical (no generic motivational content)
+- Executive-friendly with clear business impact
+- Based on real industry trends and deep technical insights
+- Written from a first-person perspective as a thought leader
+- Designed to demonstrate expertise and drive engagement
+
+Posts must be 900-1400 characters, with:
+1. A strong opening hook that demands attention
+2. Exactly 3 insight points (each 1-2 sentences)
+3. A clear takeaway or call-to-action
+4. 3-4 relevant hashtags at the end`;
+
+                // Build the user prompt
+                let userPrompt = `Create 2 unique LinkedIn post drafts about: "${topic}"
+
+Style: ${style}
+Tone: ${tone}`;
+
+                if (perspective) {
+                    userPrompt += `\nContext from user: ${perspective}`;
+                }
+
+                if (cta !== 'none') {
+                    const ctaInstructions = {
+                        'question': 'End with a thought-provoking question.',
+                        'opinion': 'End by asking for the audience\'s perspectives.',
+                        'sharing': 'End by encouraging the audience to share their experiences.'
+                    };
+                    userPrompt += `\nCallout: ${ctaInstructions[cta]}`;
+                }
+
+                userPrompt += `
+
+IMPORTANT: Return your response as a JSON array with exactly 2 objects. Each object must have:
+{
+  "label": "Draft 1" or "Draft 2",
+  "angle": "One-line description of this draft's unique angle",
+  "post": "The full LinkedIn post text (900-1400 characters, with 3-4 hashtags at the end)"
+}
+
+Return ONLY the JSON array, no other text.`;
+
+                // Call Gemini API
+                const response = await fetch(GEMINI_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-goog-api-key': API_KEY
+                    },
+                    body: JSON.stringify({
+                        systemInstruction: {
+                            parts: [{
+                                text: systemPrompt
+                            }]
+                        },
+                        contents: [{
+                            parts: [{
+                                text: userPrompt
+                            }]
+                        }]
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    if (response.status === 401 || response.status === 403) {
+                        throw new Error('API key is invalid or expired. Please check your config.js.');
+                    } else if (response.status === 429) {
+                        throw new Error('Rate limited. Please try again in a moment.');
+                    } else {
+                        throw new Error(`API error (${response.status}): ${errorData.error?.message || 'Unknown error'}`);
+                    }
+                }
+
+                const data = await response.json();
+                
+                if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+                    throw new Error('Unexpected API response format.');
+                }
+
+                const generatedText = data.candidates[0].content.parts[0].text;
+
+                // Parse JSON response
+                let drafts;
+                try {
+                    // Handle potential markdown code blocks
+                    const jsonMatch = generatedText.match(/\[[\s\S]*\]/);
+                    if (!jsonMatch) {
+                        throw new Error('Response does not contain valid JSON array');
+                    }
+                    drafts = JSON.parse(jsonMatch[0]);
+                    
+                    if (!Array.isArray(drafts) || drafts.length !== 2) {
+                        throw new Error('Expected exactly 2 draft objects');
+                    }
+                    
+                    // Validate each draft has required fields
+                    drafts.forEach((draft, idx) => {
+                        if (!draft.label || !draft.angle || !draft.post) {
+                            throw new Error(`Draft ${idx + 1} is missing required fields (label, angle, post)`);
+                        }
+                    });
+                } catch (parseError) {
+                    console.error('JSON Parse Error:', parseError, 'Raw Response:', generatedText);
+                    throw new Error(`Failed to parse response: ${parseError.message}`);
+                }
+
+                // Display the drafts
+                displayDrafts(drafts);
+
+            } catch (error) {
+                console.error('Error generating drafts:', error);
+                showErrorMessage(error.message || 'Failed to generate drafts. Please try again.');
+            } finally {
+                generateBtn.disabled = false;
+            }
+        }
+
+        function showLoadingState() {
+            draftsDiv.innerHTML = `
+                <div class="skeleton-loader">
+                    <div class="skeleton-line" style="height: 24px; margin-bottom: 16px;"></div>
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line medium"></div>
+                    <div class="skeleton-line short"></div>
+                    <div style="height: 20px; margin: 20px 0;"></div>
+                    <div class="skeleton-line" style="height: 200px; margin-bottom: 16px;"></div>
+                    <div class="skeleton-line short" style="height: 16px;"></div>
+                    <div class="skeleton-line short" style="height: 40px; margin-top: 16px;"></div>
+                </div>
+                <div class="skeleton-loader">
+                    <div class="skeleton-line" style="height: 24px; margin-bottom: 16px;"></div>
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line medium"></div>
+                    <div class="skeleton-line short"></div>
+                    <div style="height: 20px; margin: 20px 0;"></div>
+                    <div class="skeleton-line" style="height: 200px; margin-bottom: 16px;"></div>
+                    <div class="skeleton-line short" style="height: 16px;"></div>
+                    <div class="skeleton-line short" style="height: 40px; margin-top: 16px;"></div>
+                </div>
+            `;
+            generateBtn.textContent = 'Generating...';
+        }
+
+        function showErrorMessage(message) {
+            draftsSection.style.display = 'block';
+            draftsDiv.innerHTML = `
+                <div style="background-color: #ffebee; border: 1px solid #f44336; border-radius: 6px; padding: 16px; margin-bottom: 16px;">
+                    <p style="color: #c62828; margin: 0; font-weight: 500;">⚠️ Error</p>
+                    <p style="color: #d32f2f; margin: 8px 0 0 0;">${message}</p>
+                </div>
+            `;
+            showToast(message, 'error', 5000);
+        }
+
+        function displayDrafts(drafts) {
+            draftsDiv.innerHTML = '';
+
+            const draftLetters = ['A', 'B', 'C'];
+
+            drafts.forEach((draft, index) => {
+                const draftDiv = document.createElement('div');
+                draftDiv.className = `draft draft-${draftLetters[index]}`;
+                draftDiv.dataset.draftIndex = index;
+
+                const angle = draft.angle || '';
+                const postText = draft.post || draft;
+                const charCount = postText.length;
+                const isNearLimit = charCount > 2700;
+                const isOverLimit = charCount > 3000;
+
+                draftDiv.innerHTML = `
+                    <div class="draft-card">
+                        <div class="draft-header">
+                            <div class="draft-title-section">
+                                <h3 class="draft-title">Draft ${draftLetters[index]}</h3>
+                                ${angle ? `<p class="draft-angle">"${angle}"</p>` : ''}
+                            </div>
+                        </div>
+                        
+                        <textarea class="draft-text" data-draft-index="${index}" placeholder="Edit your post here...">${postText}</textarea>
+                        
+                        <div class="draft-footer">
+                            <div class="char-counter">
+                                <span class="char-count ${isOverLimit ? 'over-limit' : isNearLimit ? 'near-limit' : ''}">\n                                    ${charCount} / 3,000 characters
+                                </span>
+                                ${isOverLimit ? '<span class="warning-icon">⚠️ Exceeds LinkedIn limit</span>' : isNearLimit ? '<span class="warning-icon">⏱️ Approaching limit</span>' : ''}
+                            </div>
+                        </div>
+                        
+                        <div class="draft-actions">
+                            <button class="btn-copy" onclick="copyDraft(${index})">📋 Copy to Clipboard</button>
+                            <button class="btn-save" onclick="saveDraftFromTextarea(${index})">💾 Save Draft</button>
+                        </div>
+                    </div>
+                `;
+
+                draftsDiv.appendChild(draftDiv);
+
+                // Add event listener for live character counter
+                const textarea = draftDiv.querySelector('.draft-text');
+                textarea.addEventListener('input', (e) => {
+                    updateCharCounter(draftDiv, e.target.value);
+                });
+            });
+
+            // Store drafts globally for copy/save functions
+            window.currentDrafts = drafts.map(d => d.post || d);
+        }
+
+        function updateCharCounter(cardElement, text) {
+            const charCount = text.length;
+            const isNearLimit = charCount > 2700;
+            const isOverLimit = charCount > 3000;
+            
+            const counterElement = cardElement.querySelector('.char-count');
+            const warningElement = cardElement.querySelector('.warning-icon');
+            const charCounterDiv = cardElement.querySelector('.char-counter');
+            
+            counterElement.textContent = `${charCount} / 3,000 characters`;
+            counterElement.className = `char-count ${isOverLimit ? 'over-limit' : isNearLimit ? 'near-limit' : ''}`;
+            
+            if (warningElement) {
+                warningElement.remove();
+            }
+            
+            if (isOverLimit) {
+                const warningSpan = document.createElement('span');
+                warningSpan.className = 'warning-icon';
+                warningSpan.textContent = '⚠️ Exceeds LinkedIn limit';
+                charCounterDiv.appendChild(warningSpan);
+            } else if (isNearLimit) {
+                const warningSpan = document.createElement('span');
+                warningSpan.className = 'warning-icon';
+                warningSpan.textContent = '⏱️ Approaching limit';
+                charCounterDiv.appendChild(warningSpan);
+            }
+        }
+
+        function copyDraft(index) {
+            // Get the current text from the textarea (in case user edited it)
+            const textareas = document.querySelectorAll('.draft-text');
+            const draftText = textareas[index].value;
+            
+            copyToClipboard(draftText).then(() => {
+                showToast('✅ Copied to clipboard!', 'success');
+            }).catch(() => {
+                showToast('Failed to copy to clipboard.', 'error');
+            });
+        }
+
+        function saveDraftFromTextarea(index) {
+            // Get the current text from the textarea (in case user edited it)
+            const textareas = document.querySelectorAll('.draft-text');
+            const draftText = textareas[index].value;
+            
+            if (!draftText.trim()) {
+                showToast('Cannot save an empty draft.', 'error');
+                return;
+            }
+            
+            saveDraft(draftText);
+            showToast('✅ Draft saved!', 'success');
+        }
+
+        function saveDraft(draftText) {
+            savedDrafts.push(draftText);
+            updateSavedDrafts();
+        }
+
+        function updateSavedDrafts() {
+            savedDraftsDiv.innerHTML = '';
+            if (savedDrafts.length === 0) {
+                savedDraftsDiv.innerHTML = '<p>No saved drafts yet.</p>';
+                return;
+            }
+            savedDrafts.forEach((draft, index) => {
+                const draftDiv = document.createElement('div');
+                draftDiv.className = 'saved-draft';
+                draftDiv.innerHTML = `
+                    <div class="saved-draft-content">
+                        <textarea class="saved-draft-text" readonly>${draft}</textarea>
+                    </div>
+                    <div class="saved-draft-actions">
+                        <button onclick="copySavedDraft(${index})">📋 Copy</button>
+                        <button onclick="deleteDraft(${index})">🗑️ Delete</button>
+                    </div>
+                `;
+                savedDraftsDiv.appendChild(draftDiv);
+            });
+        }
+
+        // Toast Notification System
+        function showToast(message, type = 'info', duration = 3000) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            
+            container.appendChild(toast);
+
+            // Auto-remove after duration
+            if (duration > 0) {
+                setTimeout(() => {
+                    toast.classList.add('removing');
+                    setTimeout(() => toast.remove(), 300);
+                }, duration);
+            }
+
+            return toast;
+        }
+
+        function copySavedDraft(index) {
+            const draftText = savedDrafts[index];
+            copyToClipboard(draftText).then(() => {
+                showToast('✅ Copied to clipboard!', 'success');
+            }).catch(() => {
+                showToast('Failed to copy to clipboard.', 'error');
+            });
+        }
+
+        function deleteDraft(index) {
+            // Show confirmation toast with visual feedback
+            savedDrafts.splice(index, 1);
+            updateSavedDrafts();
+            showToast('🗑️ Draft deleted', 'success');
+        }
+
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Initialize saved drafts display
+        updateSavedDrafts();
+    </script>
+</body>
+</html>

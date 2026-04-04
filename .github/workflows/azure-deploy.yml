@@ -1,0 +1,85 @@
+name: Azure Static Web Apps CI/CD
+
+# This workflow deploys the TrendPost AI LinkedIn post generator to Azure Static Web Apps
+# It triggers on pushes to main branch and pull requests for preview deployments
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches:
+      - main
+
+jobs:
+  build_and_deploy_job:
+    # Only run if this is not a pull request being closed
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    runs-on: ubuntu-latest
+    name: Build and Deploy Job
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+          lfs: false
+
+      # No build step needed since this is a static HTML app
+      # The app consists of a single HTML file with embedded CSS/JS
+
+      - name: Build And Deploy
+        id: builddeploy
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          # The Azure Static Web Apps API token is automatically created when you create
+          # a Static Web App resource in the Azure portal. This token is used to authenticate
+          # and authorize deployments from GitHub Actions to your Azure Static Web App.
+          #
+          # How to get the AZURE_STATIC_WEB_APPS_API_TOKEN:
+          # 1. Go to the Azure portal (portal.azure.com)
+          # 2. Navigate to your Static Web App resource
+          # 3. Go to "Configuration" in the left sidebar
+          # 4. Look for "GitHub Actions secrets" section
+          # 5. Copy the deployment token
+          #
+          # Note: When you create a Static Web App in Azure and connect it to GitHub,
+          # Azure automatically adds this secret to your GitHub repository. You don't
+          # need to manually create it unless you're setting up the workflow yourself.
+          #
+          # Important: If Azure auto-generates a GitHub Actions workflow during Static
+          # Web App creation, you should delete this custom workflow file to avoid
+          # duplicate deployments and potential conflicts.
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+
+          # Repository/Build Configuration
+          repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for GitHub integrations
+
+          # Action specifies the action to take: "upload" for deployment
+          action: "upload"
+
+          # The name of the app location. Since this is a static HTML app with no build,
+          # we point to the root directory where linkedin-post-generator.html is located
+          app_location: "/"
+
+          # API location - not used for this static app
+          api_location: ""
+
+          # Output location - empty since there's no build output directory
+          # The static files are served directly from the repository root
+          output_location: ""
+
+          # Skip the app build step since this is a static HTML file
+          skip_app_build: true
+
+  close_pull_request_job:
+    # Run when a pull request is closed
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    name: Close Pull Request Job
+    steps:
+      - name: Close Pull Request
+        id: closepullrequest
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          action: "close"
