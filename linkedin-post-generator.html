@@ -50,6 +50,12 @@
                     <!-- Form for inputs -->
                     <section id="input-section">
                         <h2>Create New Post</h2>
+                        <!-- API Key input -->
+                        <div id="api-key-input">
+                            <label for="api-key">Gemini API Key:</label>
+                            <input type="password" id="api-key" placeholder="Enter your Gemini API key (starts with AIza...)">
+                            <small>Get your API key from <a href="https://makersuite.google.com/app/apikey" target="_blank">Google AI Studio</a></small>
+                        </div>
                         <!-- Topic input and suggestions -->
                         <div id="topic-input">
                             <label for="topic">Topic:</label>
@@ -754,8 +760,9 @@
 
     <script>
         // Vanilla JavaScript for app logic
-        // Firebase Cloud Function URL for generating posts (API key is stored securely server-side)
-        const FIREBASE_GENERATE_POST_URL = 'https://us-central1-trendpost-ai.cloudfunctions.net/generatePost';
+        // Load configuration (API keys are still client-side visible)
+        let API_KEY = CONFIG?.GEMINI_API_KEY || '';
+        const GEMINI_URL = CONFIG?.GEMINI_URL || 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent';
 
         // Curated trending topics
         const trendingTopics = {
@@ -926,18 +933,30 @@ IMPORTANT: Return your response as a JSON array with exactly 2 objects. Each obj
 
 Return ONLY the JSON array, no other text.`;
 
-                // Call Firebase Cloud Function (API key is stored securely server-side)
-                const response = await fetch(FIREBASE_GENERATE_POST_URL, {
+                // Get API key from input
+                const apiKey = document.getElementById('api-key').value.trim();
+                if (!apiKey) {
+                    showErrorMessage('Please enter your Gemini API key.');
+                    return;
+                }
+
+                // Call Gemini API directly
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        topic: topic,
-                        style: style,
-                        tone: tone,
-                        context: perspective,
-                        cta: cta
+                        contents: [{
+                            parts: [{
+                                text: userPrompt
+                            }]
+                        }],
+                        systemInstruction: {
+                            parts: [{
+                                text: systemPrompt
+                            }]
+                        }
                     })
                 });
 
@@ -945,18 +964,32 @@ Return ONLY the JSON array, no other text.`;
                     const errorData = await response.json();
                     if (response.status === 429) {
                         throw new Error('Rate limit exceeded. Please try again later.');
+                    } else if (response.status === 400) {
+                        throw new Error('Invalid API key or request. Please check your Gemini API key.');
                     } else {
-                        throw new Error(`Service error (${response.status}): ${errorData.error || 'Unknown error'}`);
+                        throw new Error(`API error (${response.status}): ${errorData.error?.message || 'Unknown error'}`);
                     }
                 }
 
-                const data = await response.json();
+                const geminiData = await response.json();
 
-                if (!data.success || !data.drafts) {
-                    throw new Error('Unexpected service response format.');
+                if (!geminiData.candidates || !geminiData.candidates[0] || !geminiData.candidates[0].content) {
+                    throw new Error('Unexpected API response format.');
                 }
 
-                const drafts = data.drafts;
+                const generatedText = geminiData.candidates[0].content.parts[0].text;
+
+                // Parse the JSON response
+                let drafts;
+                try {
+                    drafts = JSON.parse(generatedText);
+                    if (!Array.isArray(drafts) || drafts.length !== 2) {
+                        throw new Error("Invalid response format");
+                    }
+                } catch (parseError) {
+                    console.error("Failed to parse Gemini response:", generatedText);
+                    throw new Error('Failed to process AI response. Please try again.');
+                }
 
                 // Display the drafts
                 displayDrafts(drafts);
