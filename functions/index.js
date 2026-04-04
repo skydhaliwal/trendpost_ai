@@ -8,17 +8,31 @@ admin.initializeApp();
 const RATE_LIMIT_REQUESTS = 20;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
+// Environment-specific CORS configuration
+const isLocalDevelopment = process.env.FUNCTIONS_EMULATOR === 'true';
+const corsConfig = isLocalDevelopment
+  ? true // Allow all origins for local development
+  : { origin: ['https://trendpost-ai.web.app'] }; // Restrict to production domain
+
 exports.generatePost = onRequest(
   {
-    cors: true, // Enable CORS for all origins
+    cors: corsConfig,
     region: "us-central1",
     memory: "256MiB",
     timeoutSeconds: 60,
   },
   async (req, res) => {
-    // Only allow POST requests
-    if (req.method !== "POST") {
+    // Allow POST and OPTIONS requests (OPTIONS for CORS preflight)
+    if (req.method !== "POST" && req.method !== "OPTIONS") {
       return res.status(405).json({ error: "Method not allowed" });
+    }
+
+    // Handle CORS preflight OPTIONS request
+    if (req.method === "OPTIONS") {
+      res.set('Access-Control-Allow-Methods', 'POST');
+      res.set('Access-Control-Allow-Headers', 'Content-Type');
+      res.status(204).send('');
+      return;
     }
 
     try {
