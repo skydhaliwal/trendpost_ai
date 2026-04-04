@@ -3,7 +3,7 @@
 # - pull request opened/updated → deploys to PREVIEW URL (temporary, 7 days)
 # - pull request closed/merged → preview channel expires immediately
 # - feature branches pushed directly → NO deployment triggered
-# - FIREBASE_SERVICE_ACCOUNT secret is added by Firebase CLI automatically
+# - FIREBASE_SERVICE_ACCOUNT_TRENDPOST_AI secret is added by Firebase CLI automatically
 
 name: Firebase Deploy — TrendPost AI
 
@@ -30,7 +30,7 @@ jobs:
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TRENDPOST_AI }}
           channelId: live
           projectId: trendpost-ai
 
@@ -43,7 +43,7 @@ jobs:
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TRENDPOST_AI }}
           expires: 7d
           projectId: trendpost-ai
 
@@ -56,6 +56,6 @@ jobs:
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TRENDPOST_AI }}
           expires: 0d
           projectId: trendpost-ai
