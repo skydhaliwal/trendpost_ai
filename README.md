@@ -1,138 +1,151 @@
 # TrendPost AI
 
-A LinkedIn thought leadership post generator for senior engineering leaders.
-
-## Description
-
-TrendPost AI helps engineering leaders create compelling LinkedIn posts by generating drafts based on trending topics, chosen styles, tones, and personal perspectives using Google's Gemini API.
+A LinkedIn thought leadership post generator for senior engineering leaders — powered by Google Gemini.
 
 ## Features
 
 - Curated trending topics across 6 categories: AI Agents, Platform Engineering, Developer Productivity, FinOps, Governance, Engineering Leadership
 - Post styles: 3 Lessons, Hot Take, Trend + Implication, Framework, Story, Community Q
 - Tones: Strategic, Technical, Conversational
-- Optional personal perspective
-- Generates 2 draft posts
-- Edit drafts in-app
-- Copy to clipboard or save to local library
-- View, copy, or delete saved drafts
+- Optional personal context and call-to-action
+- Generates 2 unique draft posts per request
+- Live character counter (LinkedIn 3,000 char limit)
+- Edit drafts in-app, copy to clipboard, or save to an in-session library
+- Light / dark mode toggle
 
 ## Tech Stack
 
-- Single-file HTML app
-- Vanilla JavaScript
-- CSS in style tag
-- Google Gemini 2.0 Flash API
-- Lucide Icons from CDN
-- Google Fonts (Inter)
+| Layer | Technology |
+|---|---|
+| App | Single-page HTML + Vanilla JS (ES modules) |
+| AI | Google Gemini API (`gemini-flash-latest`) |
+| Hosting | Firebase Hosting |
+| Icons | Lucide (CDN) |
+| Fonts | Google Fonts — Inter |
 
-## Configuration
+## Getting Started
 
-### API Key Setup
+### 1. Get a Gemini API Key
 
-The app uses a Google Gemini API key stored in `config.js`. The API key is configured at the file level and is not exposed in the UI.
+Get a free key from [Google AI Studio](https://aistudio.google.com/app/apikey).
 
-**⚠️ Security Warning**: Since this is a client-side only application, API keys are visible to users in the browser's network requests. This setup is suitable for development/demo purposes but not recommended for production use.
+### 2. Run Locally
 
-**For Production**: Implement a backend server to proxy API calls and keep API keys secure.
+No build step required. Serve the project root with any static file server:
 
-### Files:
-- `config.js` - Contains API configuration (edit this file to update your API key)
-- `.env` - Example environment file (for documentation only, not used by client-side app)
-- `.gitignore` - Prevents committing sensitive config files
+```bash
+npx serve . -p 3000
+# then open http://localhost:3000/linkedin-post-generator.html
+```
 
-To update the API key:
-- Edit `config.js` and update the `GEMINI_API_KEY` value
+### 3. Use the App
 
-## How to Use
+1. Enter your Gemini API key in the API key field
+2. Enter a topic or pick from curated suggestions
+3. Select a post style and tone
+4. Optionally add personal context or a call-to-action
+5. Click **Generate Posts**
+6. Edit, copy, or save the drafts
 
-1. Open `linkedin-post-generator.html` in a web browser.
-2. Enter a topic or choose from suggestions.
-3. Select post style and tone.
-4. Optionally add your perspective.
-5. Click "Generate Drafts" to create posts.
-6. Edit drafts, copy, or save them.
-7. View saved drafts in the Saved Drafts section.
+> Your API key is used directly in the browser and never stored or sent anywhere other than the Gemini API.
 
-## API Key
+## Project Structure
 
-The app now uses a secure Firebase Cloud Function as a proxy for the Gemini API. The API key is stored server-side in Firebase Functions configuration and is never exposed to the client.
+```
+├── linkedin-post-generator.html   # Main app entry point
+├── src/
+│   ├── app.js                     # DOM logic and event handlers
+│   └── utils.js                   # Pure functions (prompt building, parsing, clipboard)
+├── tests/
+│   ├── setup.js                   # jsdom test setup and shared DOM fixture
+│   ├── unit/
+│   │   └── utils.test.js          # Unit tests for pure utility functions
+│   ├── component/
+│   │   └── dom.test.js            # Component tests for DOM interactions
+│   └── e2e/
+│       └── app.spec.js            # End-to-end Playwright tests (mocked Gemini API)
+├── .github/workflows/
+│   ├── tests.yml                  # CI: run tests on every push and PR
+│   ├── firebase-hosting-merge.yml # Deploy to live on merge to main
+│   ├── firebase-hosting-pull-request.yml  # Preview deploy on PR
+│   └── auto-pr.yml                # Auto-create PR to main on push
+├── vitest.config.js               # Vitest configuration
+├── playwright.config.js           # Playwright configuration
+└── package.json                   # Dev dependencies and scripts
+```
 
-**Setup:**
-1. Get your Gemini API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
-2. Set it securely in Firebase: `firebase functions:config:set gemini.apikey="YOUR_KEY"`
-3. Deploy the function: `firebase deploy --only functions`
+## Testing
 
-**Security Benefits:**
-- API keys are never visible in client-side code
-- Rate limiting prevents abuse
-- Server-side validation and error handling
+### Install dependencies
+
+```bash
+npm install
+```
+
+### Unit & Component tests (Vitest + jsdom)
+
+```bash
+npm test
+```
+
+Covers 55 tests across:
+- `copyToClipboard`, `buildUserPrompt`, `buildSystemPrompt`, `parseDraftsResponse`, `getCharCountStatus`
+- `switchView`, `showToast`, `updateCharCounter`, `displayDrafts`, `saveDraft`, `deleteDraft`, `showErrorMessage`
+
+### End-to-end tests (Playwright)
+
+```bash
+npx playwright install --with-deps chromium   # first time only
+npm run test:e2e
+```
+
+Covers 12 full browser tests using a **mocked Gemini API response** — no real API key or quota needed:
+- Page load, navigation, theme toggle
+- Validation errors (missing topic, missing API key)
+- Draft generation, character counter, copy button, save draft
+
+### Run all tests
+
+```bash
+npm run test:all
+```
+
+## CI / CD
+
+| Trigger | Workflow | Action |
+|---|---|---|
+| Push to any branch (except main) | `auto-pr.yml` | Opens a PR to main automatically |
+| PR to main opened/updated | `firebase-hosting-pull-request.yml` | Deploys a preview channel |
+| Merge to main | `firebase-hosting-merge.yml` | Deploys to live Firebase Hosting |
+| Push or PR | `tests.yml` | Runs unit, component and E2E tests |
+
+## Deployment (Firebase Hosting)
+
+### One-time setup
+
+```bash
+npm install -g firebase-tools
+firebase login
+firebase init hosting
+```
+
+When prompted:
+- Public directory → `.` (project root)
+- Single page app → N
+- GitHub Actions deploy → Y
+
+### Manual deploy
+
+```bash
+firebase deploy
+```
+
+### Automatic deploy
+
+Every merge to `main` triggers `firebase-hosting-merge.yml` and deploys automatically.
+
+**Cost: $0** — Firebase Hosting free tier includes 10 GB storage, 360 MB/day bandwidth, global CDN and SSL.
 
 ## Target Audience
 
-Engineering leaders, CTOs, VPs of Engineering, and AI transformation stakeholders.
-
-## Deployment (Firebase Hosting — Google Cloud)
-
-### One-time setup (run these commands in VS Code terminal):
-
-Step 1 — Install Firebase CLI:
-
-npm install -g firebase-tools
-
-Step 2 — Login with your Google account:
-
-firebase login
-
-Step 3 — Initialise Firebase in the project:
-
-firebase init hosting
-
-When prompted:
-- Use an existing project or create new → create new, name it trendpost-ai
-- Public directory → . (just a dot for root)
-- Single page app → N
-- Automatic GitHub deploys → Y
-- GitHub repo → your-username/trendpost-ai
-- Automatic deploys on main → Y
-- Preview deployments on PRs → Y
-
-Step 4 — Set up Cloud Functions:
-
-firebase init functions
-
-When prompted:
-- Language → JavaScript
-- Use ESLint → Y
-- Install dependencies → Y
-
-Step 5 — Configure Gemini API key securely:
-
-firebase functions:config:set gemini.apikey="YOUR_GEMINI_API_KEY_HERE"
-
-Step 6 — Deploy functions:
-
-firebase deploy --only functions
-
-Step 7 — First manual deploy:
-
-firebase deploy
-
-### After setup — every future deploy is automatic:
-
-git add .
-git commit -m "your message"
-git push origin main
-→ GitHub Actions deploys to Firebase within 2 minutes
-→ Live at https://trendpost-ai-xxxxx.web.app
-
-### Cost: $0 forever (Firebase Hosting free tier)
-- 10GB storage
-- 360MB bandwidth per day
-- Custom domain and SSL included
-- Global CDN included
-
-### Security Notes:
-- API keys are now stored server-side in Firebase Functions config
-- Client-side code no longer exposes sensitive credentials
-- Rate limiting prevents abuse (20 requests per IP per hour)
+Engineering leaders, CTOs, VPs of Engineering, and AI transformation stakeholders who want to build a consistent LinkedIn presence with minimal effort.
