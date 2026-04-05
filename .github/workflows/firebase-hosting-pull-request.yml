@@ -9,7 +9,7 @@ on:
     types: [opened, synchronize, reopened, closed]
 
 concurrency:
-  group: firebase-${{ github.ref }}
+  group: firebase-preview-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
