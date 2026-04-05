@@ -8,7 +8,7 @@ on:
       - main
 
 concurrency:
-  group: firebase-${{ github.ref }}
+  group: firebase-deploy-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
