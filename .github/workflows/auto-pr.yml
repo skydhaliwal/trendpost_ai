@@ -1,0 +1,28 @@
+name: Auto-create PR to main
+on:
+  push:
+    branches:
+      - 'feature/**'
+
+concurrency:
+  group: auto-pr-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  create_pr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create or update PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr create \
+            --base main \
+            --head ${{ github.ref_name }} \
+            --title "Merge ${{ github.ref_name }} into main" \
+            --body "Auto-generated PR from branch \`${{ github.ref_name }}\`." \
+          || echo "PR already exists, skipping"
