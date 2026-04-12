@@ -1,13 +1,12 @@
-name: Deploy to Firebase Hosting on merge
+name: Security Scans
 
 on:
   push:
+    branches-ignore:
+      - main
+  pull_request:
     branches:
       - main
-
-concurrency:
-  group: firebase-deploy-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
   gitleaks:
@@ -47,16 +46,3 @@ jobs:
           queries: security-and-quality
       - uses: github/codeql-action/autobuild@v3
       - uses: github/codeql-action/analyze@v3
-
-  build_and_deploy:
-    name: Deploy to Firebase (live)
-    needs: [gitleaks, npm-audit, codeql]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TRENDPOST_AI }}
-          channelId: live
-          projectId: trendpost-ai
