@@ -9,10 +9,10 @@
     "serve": "npx serve . -p 3000"
   },
   "devDependencies": {
-    "@playwright/test": "^1.45.0",
-    "@vitest/coverage-v8": "^2.0.0",
-    "jsdom": "^24.0.0",
+    "@playwright/test": "^1.60.0",
+    "@vitest/coverage-v8": "^4.1.6",
+    "jsdom": "^29.1.1",
     "serve": "^14.0.0",
-    "vitest": "^2.0.0"
+    "vitest": "^4.1.6"
   }
 }
